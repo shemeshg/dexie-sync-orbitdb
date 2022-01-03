@@ -27,8 +27,25 @@ export class MySubClassedDexie extends Dexie {
 
 export const db=new MySubClassedDexie();
 Dexie.Syncable.registerSyncProtocol(SYNCABLE_PROTOCOL, { sync: new OrbitDexieSyncClient().sync });
-// This example uses the WebSocketSyncProtocol included in earlier steps.
+
+
+/*
+import {OrbitDexieSyncClient, SYNCABLE_PROTOCOL} from "./OrbitDexieSyncClient"
 db.syncable.connect (SYNCABLE_PROTOCOL, "https://syncserver.com/sync");
+
+db.syncable.connect(
+    "myProtocol",
+    "https://remote-server/...",
+    {options...})
+.catch(err => {
+    console.error (`Failed to connect: ${err.stack || err}`);
+    db.syncable.disconnect (url)
+});
+
+
+*/
+
+
 db.syncable.on('statusChanged', function (newStatus) {
     console.log ("Sync Status changed: " + Dexie.Syncable.StatusTexts[newStatus]);
 });

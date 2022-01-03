@@ -1,6 +1,6 @@
 import { ApplyRemoteChangesFunction, IPersistedContext, ISyncProtocol, PollContinuation, ReactiveContinuation } from 'dexie-syncable/api';
-
 import { IDatabaseChange } from 'dexie-observable/api';
+import { v4 as uuidv4 } from 'uuid';
 
 export const SYNCABLE_PROTOCOL = 'orbitdb';
 
@@ -20,7 +20,7 @@ export class OrbitDexieSyncClient implements ISyncProtocol {
     onError: (error: any, again?: number) => void): void {
     const POLL_INTERVAL = 10000//10000; // Poll every 10th second
     if (!context.clientIdentity){
-      context.clientIdentity = "MyOrbitDbId"
+      context.clientIdentity = uuidv4()      
       context.save
     } 
 
@@ -31,7 +31,7 @@ export class OrbitDexieSyncClient implements ISyncProtocol {
     if (2 > i) {
       onChangesAccepted();  
       onSuccess({ again: POLL_INTERVAL });
-      /*
+      
       const request = {
         clientIdentity: context.clientIdentity || null,
         baseRevision: baseRevision,
@@ -39,7 +39,8 @@ export class OrbitDexieSyncClient implements ISyncProtocol {
         changes: changes,
         syncedRevision: syncedRevision
       };
-
+      console.log(request)
+      /*
       conn.doCreate()
       .then(()=>{        
         if (conn.node)
