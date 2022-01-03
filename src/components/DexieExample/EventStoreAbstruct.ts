@@ -15,11 +15,11 @@ export abstract class EventStoreAbstruct<T> extends DbStore {
 
   getAll(baseRevision?: string): T[] | undefined {
     if (baseRevision) {
-      return this.store.iterator({ gt: baseRevision })
+      return this.store.iterator({ gt: baseRevision, limit: -1 })
         .collect()
         .map((e) => e.payload.value)
     } else {
-      return this.store.iterator()
+      return this.store.iterator({limit: -1})
         .collect()
         .map((e) => e.payload.value)
     }

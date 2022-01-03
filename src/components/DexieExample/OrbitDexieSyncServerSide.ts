@@ -1,8 +1,10 @@
 import { ICreateChange, IDatabaseChange, IUpdateChange } from "dexie-observable/api";
-import {getChangesStore} from "./ChangesStore"
+import { ipfsRepo } from "../OrbitDbWebExample/IpfsOrbitRepo";
+import { ChangesStore } from "./ChangesStore";
+
 
 class OrbitDexieSyncServerSide {
-
+  changesStore?: ChangesStore
 
   toCreateObj(c: IDatabaseChange): ICreateChange {
     return c as ICreateChange
@@ -18,7 +20,11 @@ class OrbitDexieSyncServerSide {
       clientIdentity: any; baseRevision: unknown; partial: boolean;
       changes: IDatabaseChange[]; syncedRevision: unknown;url: string
     }) {
-    const changesStore=await getChangesStore();
+    if(!this.changesStore){
+      this.changesStore = new ChangesStore(ipfsRepo)
+      this.changesStore.loadStoreIfNotLoaded(request.url)
+    }
+    const changesStore=this.changesStore;
     await changesStore.loadStoreIfNotLoaded(request.url)
     const baseRevision = request.baseRevision as string | undefined
     const serverChangesFromOtherUsers = changesStore.getAll(baseRevision)?.filter((row) => { return row.source !== request.clientIdentity })
@@ -35,7 +41,6 @@ class OrbitDexieSyncServerSide {
       UPDATE = 2,
       DELETE = 3;
 
-    if (request.changes.length>0){debugger;}
     for (let i = 0; i < request.changes.length; i++) {
       const change = request.changes[i]
 
