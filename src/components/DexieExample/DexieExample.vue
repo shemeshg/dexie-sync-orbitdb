@@ -24,31 +24,29 @@ export default defineComponent({
   props: {},
   components: { FriendsList },
   setup() {
-    const isIpfsReady=ref(false)
+    const isIpfsReady = ref(false);
     const isSyncDefined = ref(false);
     const syncUrl = ref("");
     const orbitdbUrlToOpen = ref("");
 
     const doOnMounted = async () => {
-
       await ipfsRepo.doConnect();
       const list = await db.syncable.list();
       if (list.length > 0) {
         isSyncDefined.value = true;
         syncUrl.value = list[0];
-        await db.syncable.connect(SYNCABLE_PROTOCOL,syncUrl.value)
+        await db.syncable.connect(SYNCABLE_PROTOCOL, syncUrl.value);
 
-        const changesStore=new ChangesStore(ipfsRepo,(s)=>{
-          if(s.newData){
-          console.log(s)
-          debugger;
+        const changesStore = new ChangesStore(ipfsRepo, (s) => {
+          if (s.newData) {
+            console.log(s);
+            debugger;
           }
-
-        });      
-        await changesStore.loadStoreIfNotLoaded(orbitdbUrlToOpen.value)
+        });
+        await changesStore.loadStoreIfNotLoaded(orbitdbUrlToOpen.value);
       }
-      
-      isIpfsReady.value=true
+
+      isIpfsReady.value = true;
     };
 
     const doUndefineSync = async () => {
@@ -62,10 +60,10 @@ export default defineComponent({
 
     const doDefineSync = async () => {
       await doUndefineSync();
-      const changesStore=new ChangesStore(ipfsRepo);
+      const changesStore = new ChangesStore(ipfsRepo);
       //await changesStore.resetStore()
-      await changesStore.loadStoreIfNotLoaded(orbitdbUrlToOpen.value)
-      
+      await changesStore.loadStoreIfNotLoaded(orbitdbUrlToOpen.value);
+
       if (!changesStore.storeAddress) {
         return;
       }
