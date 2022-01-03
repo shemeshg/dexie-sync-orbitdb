@@ -19,7 +19,7 @@
      <a href="https://github.com/orbitdb/orbit-db" target="_blank">https://github.com/orbitdb/orbit-db</a>
       </pre>
     </div>
-    <p>It might help to locally<br/> ipfs daemon --enable-pubsub-experiment</p>
+    <h3>Most likelly you will have to locally to make this work<br/> ipfs daemon --enable-pubsub-experiment</h3>
     
     <h2>Open or Create Local Database</h2>
     <i>Open a database locally and create it if the database doesn't exist.</i>
