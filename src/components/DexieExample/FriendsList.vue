@@ -1,4 +1,5 @@
 <template>
+{{refreshText}}
   <p>Add friend</p>
   <FriendAdder
     @friend-add="friendAdd"
@@ -16,7 +17,9 @@ import { defineComponent, ref, onMounted, Ref } from "vue";
 import { Friend, db } from "./db";
 
 export default defineComponent({
-  props: {},
+  props: {
+    refreshText: String
+  },
   components: { FriendAdder },
   setup() {
     const addStatus = ref("");
@@ -44,6 +47,7 @@ export default defineComponent({
     };
 
     const doOnMounted = async ()=>{
+      frendslistAry.value = []
       frendslistAry.value = await db.friends.toArray() 
     }
     
@@ -54,7 +58,7 @@ export default defineComponent({
 
     onMounted(doOnMounted)
 
-    return {addStatus, friendAdd, friendAddComponentRef, frendslistAry, delItem }
+    return {addStatus, friendAdd, friendAddComponentRef, frendslistAry, delItem, doOnMounted }
   },
 });
 </script>

@@ -1,4 +1,5 @@
 <template>
+  
   <p v-if="!isIpfsReady">Loading IPFS...</p>
   <div v-if="isIpfsReady">
     <p v-if="isSyncDefined">Sync with {{ syncUrl }}</p>
@@ -28,6 +29,10 @@ export default defineComponent({
     const isSyncDefined = ref(false);
     const syncUrl = ref("");
     const orbitdbUrlToOpen = ref("");
+    
+
+
+
 
     const doOnMounted = async () => {
       await ipfsRepo.doConnect();
@@ -35,15 +40,12 @@ export default defineComponent({
       if (list.length > 0) {
         isSyncDefined.value = true;
         syncUrl.value = list[0];
+
+        debugger;
+        
+
         await db.syncable.connect(SYNCABLE_PROTOCOL, syncUrl.value);
 
-        const changesStore = new ChangesStore(ipfsRepo, (s) => {
-          if (s.newData) {
-            console.log(s);
-            debugger;
-          }
-        });
-        await changesStore.loadStoreIfNotLoaded(orbitdbUrlToOpen.value);
       }
 
       isIpfsReady.value = true;
@@ -74,14 +76,14 @@ export default defineComponent({
     };
 
     onMounted(doOnMounted);
-
+    
     return {
       isSyncDefined,
       doUndefineSync,
       doDefineSync,
       syncUrl,
       orbitdbUrlToOpen,
-      isIpfsReady,
+      isIpfsReady,    
     };
   },
 });
