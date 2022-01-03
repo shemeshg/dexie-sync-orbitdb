@@ -11,6 +11,9 @@
   "dependencies": {
     "@types/orbit-db": "github:orbitdb/orbit-db-types",
     "core-js": "^3.6.5",
+    "dexie": "^3.2.0",
+    "dexie-observable": "^3.0.0-beta.11",
+    "dexie-syncable": "^3.0.0-beta.10",
     "ipfs": "^0.61.0",
     "ipfs-core": "^0.13.0",
     "ipfs-core-types": "^0.9.0",

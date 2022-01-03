@@ -69,10 +69,6 @@ import { DummyStore } from "./DummyStore";
 import { IntevalSchedualer } from "./IntevalSchedualer";
 
 export default defineComponent({
-  name: "HelloWorld",
-  props: {
-    msg: String,
-  },
   setup() {
     const outputHeaderElmText = ref("");
     const outputElmText = ref("");
