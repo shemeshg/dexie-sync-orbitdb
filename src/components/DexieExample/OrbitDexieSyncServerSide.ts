@@ -1,5 +1,5 @@
 import { ICreateChange, IDatabaseChange, IUpdateChange } from "dexie-observable/api";
-import {changesStore} from "./ChangesStore"
+import {getChangesStore} from "./ChangesStore"
 
 class OrbitDexieSyncServerSide {
 
@@ -18,21 +18,31 @@ class OrbitDexieSyncServerSide {
       clientIdentity: any; baseRevision: unknown; partial: boolean;
       changes: IDatabaseChange[]; syncedRevision: unknown;url: string
     }) {
+    const changesStore=await getChangesStore();
     await changesStore.loadStoreIfNotLoaded(request.url)
     const baseRevision = request.baseRevision as string | undefined
     const serverChangesFromOtherUsers = changesStore.getAll(baseRevision)?.filter((row) => { return row.source !== request.clientIdentity })
+    console.log("all is")
     console.log(changesStore.getAll());
-    let currentRevision = changesStore.getLastRecords(1)[0].key
+    console.log("**")
+    const lr =changesStore.getLastRecords(1)
+    let currentRevision=""
+    if (lr.length ===1){
+      currentRevision = changesStore.getLastRecords(1)[0].key
+    }
     
     const CREATE = 1,
       UPDATE = 2,
       DELETE = 3;
+
+    if (request.changes.length>0){debugger;}
     for (let i = 0; i < request.changes.length; i++) {
       const change = request.changes[i]
 
       switch (change.type) {
         case CREATE:
-          currentRevision = await changesStore.doCreate(change.table, change.key, this.toCreateObj(change).obj, request.clientIdentity);
+
+        currentRevision = await changesStore.doCreate(change.table, change.key, this.toCreateObj(change).obj, request.clientIdentity);
           break;
         case UPDATE:
           currentRevision = await changesStore.doUpdate(change.table, change.key, this.toUpdateObj(change).mods, request.clientIdentity);

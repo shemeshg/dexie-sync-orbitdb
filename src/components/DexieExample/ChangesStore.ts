@@ -18,7 +18,7 @@ interface ChangeItf {
   mods?: unknown[]
 }
 
-class ChangesStore extends EventStoreAbstruct<ChangeItf>{
+export class ChangesStore extends EventStoreAbstruct<ChangeItf>{
   async queryAndRender(): Promise<void>{return;}  
 
   changeStoreIsLoaded = false
@@ -37,11 +37,16 @@ class ChangesStore extends EventStoreAbstruct<ChangeItf>{
   }
 
   async resetStore(): Promise<void> {
-      await super.resetStore()
+    if(this.store){
+      await this.store.close()
+    }
+      
       this.changeStoreIsLoaded = false;
   }
 
-  async doCreate(table: string, key: string, obj: unknown, clientIdentity: string) {
+  async doCreate(table: string, key: string, obj: unknown, clientIdentity: string): Promise<string> {
+    debugger;
+
     const cid = await this.store?.add({
       hash: uuidv4(),
       rev: uuidv4(),
@@ -51,6 +56,7 @@ class ChangesStore extends EventStoreAbstruct<ChangeItf>{
       key: key,
       obj: obj
     })
+    debugger;
     if (!cid) { throw new Error("Error in log") }
     return cid;
   }
@@ -72,7 +78,7 @@ class ChangesStore extends EventStoreAbstruct<ChangeItf>{
     return cid;
   }
 
-  async doDelete(table: string, key: string, clientIdentity: string) {
+  async doDelete(table: string, key: string, clientIdentity: string): Promise<string> {
     const cid = await this.store.add({
       hash: uuidv4(),
       rev: uuidv4(),
@@ -87,4 +93,13 @@ class ChangesStore extends EventStoreAbstruct<ChangeItf>{
 
 }
 
-export const changesStore = new ChangesStore(ipfsRepo);
+let changestoreP: ChangesStore|undefined
+export async function getChangesStore():Promise<ChangesStore>{
+  if (changestoreP){return changestoreP}
+  await ipfsRepo.doConnect()
+  changestoreP=new ChangesStore(ipfsRepo,(data)=>{
+    console.log(data)
+    debugger;
+  })
+  return changestoreP;
+}

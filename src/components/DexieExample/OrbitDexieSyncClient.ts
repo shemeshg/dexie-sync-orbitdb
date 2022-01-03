@@ -20,15 +20,11 @@ export class OrbitDexieSyncClient implements ISyncProtocol {
     onSuccess: (continuation: PollContinuation | ReactiveContinuation) => void,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any, again?: number) => void): void {
-    const POLL_INTERVAL = 10000//10000; // Poll every 10th second
+    const POLL_INTERVAL = 3000//10000; // Poll every 10th second
     if (!context.clientIdentity) {
       context.clientIdentity = uuidv4()
       context.save
     }
-
-
-
-
 
 
     const request = {
@@ -45,7 +41,7 @@ export class OrbitDexieSyncClient implements ISyncProtocol {
         onChangesAccepted();
         const changes = serverSideData?.changes || []
         applyRemoteChanges(changes as unknown as IDatabaseChange[], serverSideData?.currentRevision, partial)
-
+        
         onSuccess({ again: POLL_INTERVAL });
       }).catch((e) => {
         onError(e, Infinity);
