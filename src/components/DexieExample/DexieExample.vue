@@ -18,7 +18,7 @@ import { db } from "./db";
 import { SYNCABLE_PROTOCOL } from "./OrbitDexieSyncClient";
 
 import { ipfsRepo } from "../OrbitDbWebExample/IpfsOrbitRepo";
-import { ChangesStore } from "./ChangesStore";
+import { changesStore } from "./ChangesStore";
 
 export default defineComponent({
   props: {},
@@ -51,22 +51,16 @@ export default defineComponent({
     const doDefineSync = async () => {
       await doUndefineSync();
 
-      const dbstore = new ChangesStore(ipfsRepo);
-      if (orbitdbUrlToOpen.value) {
-        await dbstore.openStore(orbitdbUrlToOpen.value);
-      } else {
-        await dbstore.createStore("changes", true);
-      }
-
-      await dbstore.loadStore();
-
-      if (!dbstore.storeAddress) {
+      await changesStore.resetStore()
+      await changesStore.loadStoreIfNotLoaded(orbitdbUrlToOpen.value)
+      
+      if (!changesStore.storeAddress) {
         return;
       }
-      await db.syncable.connect(SYNCABLE_PROTOCOL, dbstore.storeAddress);
+      await db.syncable.connect(SYNCABLE_PROTOCOL, changesStore.storeAddress);
 
       isSyncDefined.value = true;
-      syncUrl.value = dbstore.storeAddress;
+      syncUrl.value = changesStore.storeAddress;
     };
 
     onMounted(doOnMounted);

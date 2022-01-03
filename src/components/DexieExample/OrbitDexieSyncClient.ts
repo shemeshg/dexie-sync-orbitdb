@@ -2,6 +2,8 @@ import { ApplyRemoteChangesFunction, IPersistedContext, ISyncProtocol, PollConti
 import { IDatabaseChange } from 'dexie-observable/api';
 import { v4 as uuidv4 } from 'uuid';
 
+import { changesStore } from './ChangesStore';
+
 export const SYNCABLE_PROTOCOL = 'orbitdb';
 
 export class OrbitDexieSyncClient implements ISyncProtocol {
@@ -29,8 +31,7 @@ export class OrbitDexieSyncClient implements ISyncProtocol {
     const i = 1
 
     if (2 > i) {
-      onChangesAccepted();  
-      onSuccess({ again: POLL_INTERVAL });
+
       
       const request = {
         clientIdentity: context.clientIdentity || null,
@@ -39,7 +40,13 @@ export class OrbitDexieSyncClient implements ISyncProtocol {
         changes: changes,
         syncedRevision: syncedRevision
       };
-      console.log(request)
+      
+      changesStore.loadStoreIfNotLoaded(url) //REMOVE THIS IT BELONGS TO SERVER SIDE
+      .then(()=>{
+        console.log(request);
+        onChangesAccepted();  
+        onSuccess({ again: POLL_INTERVAL });
+      })
       /*
       conn.doCreate()
       .then(()=>{        
