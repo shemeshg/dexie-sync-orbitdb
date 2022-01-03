@@ -10,6 +10,9 @@ export class DummyStore extends DbStore {
   get store(): Store | undefined{
     return this.storeProtected
   }
+  set store(store: Store | undefined){
+    this.storeProtected = store
+  }
   private queryTest() {
     if (!this.store) { throw new Error("No this.store instance") }
     if (this.store.type === 'eventlog')      

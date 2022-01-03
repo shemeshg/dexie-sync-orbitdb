@@ -6,7 +6,10 @@ class IpfsOrbitRepo {
   ipfs?: IPFS.IPFS
   orbitdb?: OrbitDB;
 
+  private isConnected=false;
+
   async doConnect() {
+    if (this.isConnected){return;}
     // Create IPFS instance
     this.ipfs = await IPFS.create({
       repo: '/orbitdb/examples/browser/new/ipfs/0.33.1',
@@ -34,7 +37,7 @@ class IpfsOrbitRepo {
       }
     })
     this.orbitdb = await OrbitDB.createInstance(this.ipfs)
-
+    this.isConnected=true
   }
 
 
