@@ -1,4 +1,4 @@
-# orbit-db-browser-vue
+# dexie-sync-orbitdb
 
 ## Project setup
 ```
