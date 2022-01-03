@@ -1,5 +1,4 @@
 <template>
-{{refreshText}}
   <p>Add friend</p>
   <FriendAdder
     @friend-add="friendAdd"
@@ -13,8 +12,9 @@
 </template>
 <script lang="ts">
 import FriendAdder from "@/components/DexieExample/FriendAdder.vue"; // @ is an alias to /src
-import { defineComponent, ref, onMounted, Ref } from "vue";
+import { defineComponent, ref, onMounted, computed } from "vue";
 import { Friend, db } from "./db";
+import { useStore } from 'vuex'
 
 export default defineComponent({
   props: {
@@ -22,9 +22,10 @@ export default defineComponent({
   },
   components: { FriendAdder },
   setup() {
+    const store = useStore()
     const addStatus = ref("");
     const friendAddComponentRef=ref();
-    const frendslistAry: Ref<Friend[]>=ref([])
+    /* const frendslistAry: Ref<Friend[]>=ref([]) */
     const friendAdd = async (params: Friend) => {
       addStatus.value = "";
 
@@ -39,7 +40,8 @@ export default defineComponent({
           successfully added. Got id ${id}`;
        
         friendAddComponentRef.value.resetForm();
-        frendslistAry.value = await db.friends.toArray() 
+        store.dispatch("refreshList")
+        
       } catch (error) {
         addStatus.value = `Failed to add
           ${params.name}: ${error}`;
@@ -47,18 +49,18 @@ export default defineComponent({
     };
 
     const doOnMounted = async ()=>{
-      frendslistAry.value = []
-      frendslistAry.value = await db.friends.toArray() 
+      store.dispatch("refreshList")
     }
     
     const delItem=async (id: number)=>{
       await db.friends.delete(id) 
-      frendslistAry.value = await db.friends.toArray() 
+      store.dispatch("refreshList")
     }
 
     onMounted(doOnMounted)
 
-    return {addStatus, friendAdd, friendAddComponentRef, frendslistAry, delItem, doOnMounted }
+    return {addStatus, friendAdd, friendAddComponentRef,  delItem, doOnMounted,
+    frendslistAry: computed(() => store.state.myList) }
   },
 });
 </script>

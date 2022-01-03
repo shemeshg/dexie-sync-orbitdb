@@ -28,9 +28,7 @@ class OrbitDexieSyncServerSide {
     await changesStore.loadStoreIfNotLoaded(request.url)
     const baseRevision = request.baseRevision as string | undefined
     const serverChangesFromOtherUsers = changesStore.getAll(baseRevision)?.filter((row) => { return row.source !== request.clientIdentity })
-    console.log("all is")
-    console.log(changesStore.getAll());
-    console.log("**")
+
     const lr =changesStore.getLastRecords(1)
     let currentRevision=""
     if (lr.length ===1){

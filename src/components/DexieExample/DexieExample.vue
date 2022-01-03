@@ -40,10 +40,7 @@ export default defineComponent({
       if (list.length > 0) {
         isSyncDefined.value = true;
         syncUrl.value = list[0];
-
-        debugger;
         
-
         await db.syncable.connect(SYNCABLE_PROTOCOL, syncUrl.value);
 
       }

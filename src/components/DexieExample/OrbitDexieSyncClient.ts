@@ -3,6 +3,7 @@ import { IDatabaseChange } from 'dexie-observable/api';
 import { v4 as uuidv4 } from 'uuid';
 
 import { orbitDexieSyncServerSide } from './OrbitDexieSyncServerSide';
+import store from "../../store/index"
 
 export const SYNCABLE_PROTOCOL = 'orbitdb';
 
@@ -36,10 +37,15 @@ export class OrbitDexieSyncClient implements ISyncProtocol {
       url: url
     };
 
+    //To Make vue refresh
+    store.dispatch('refreshList')
+
+
     orbitDexieSyncServerSide.OrbitDixieServerSide(request)
       .then((serverSideData) => {
         onChangesAccepted();
         const changes = serverSideData?.changes || []
+
         applyRemoteChanges(changes as unknown as IDatabaseChange[], serverSideData?.currentRevision, partial)
         
         onSuccess({ again: POLL_INTERVAL });
