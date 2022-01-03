@@ -1,23 +1,23 @@
+import CounterStore from "orbit-db-counterstore"
+import DocumentStore from "orbit-db-docstore"
+import EventStore from "orbit-db-eventstore"
+import FeedStore from "orbit-db-feedstore"
+import KeyValueStore from "orbit-db-kvstore"
 import {DbStore} from "./IpfsOrbitRepo"
 
 export class DummyStore extends DbStore {
   private queryTest() {
     if (!this.store) { throw new Error("No this.store instance") }
-    if (this.store.type === 'eventlog')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (this.store as any).iterator({ limit: 5 }).collect()
+    if (this.store.type === 'eventlog')      
+      return (this.store as EventStore<string>).iterator({ limit: 5 }).collect()
     else if (this.store.type === 'feed')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (this.store as any).iterator({ limit: 5 }).collect()
+      return (this.store as FeedStore<string>).iterator({ limit: 5 }).collect()
     else if (this.store.type === 'docstore')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (this.store as any).get('peer1')
+      return (this.store as DocumentStore<string>).get('peer1')
     else if (this.store.type === 'keyvalue')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (this.store as any).get('mykey')
-    else if (this.store.type === 'counter')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (this.store as any).value
+      return (this.store as KeyValueStore<string>).get('mykey')
+    else if (this.store.type === 'counter')      
+      return (this.store as CounterStore).value
     else
       throw new Error(`Unknown datatbase type:  ${this.store.type}`)
 
@@ -37,7 +37,7 @@ export class DummyStore extends DbStore {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       oplogLower: (this.store as any)._replicationStatus.max,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      result: result.slice().reverse().map((e: any) => e.payload.value)
+      result: (result as string[]).slice().reverse().map((e: any) => e.payload.value)
     }
 
     this.statusFnc({ queryData: statusToReport, status: "", newData: true  });
