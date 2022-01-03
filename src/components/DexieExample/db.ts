@@ -2,7 +2,7 @@
 import Dexie from 'dexie';
 import 'dexie-observable';
 import 'dexie-syncable';
-
+import {OrbitDexieSyncClient, SYNCABLE_PROTOCOL} from "./OrbitDexieSyncClient"
 
 export interface Friend {
   oid?: string;
@@ -26,6 +26,12 @@ export class MySubClassedDexie extends Dexie {
 
 
 export const db=new MySubClassedDexie();
+Dexie.Syncable.registerSyncProtocol(SYNCABLE_PROTOCOL, { sync: new OrbitDexieSyncClient().sync });
+// This example uses the WebSocketSyncProtocol included in earlier steps.
+db.syncable.connect (SYNCABLE_PROTOCOL, "https://syncserver.com/sync");
+db.syncable.on('statusChanged', function (newStatus) {
+    console.log ("Sync Status changed: " + Dexie.Syncable.StatusTexts[newStatus]);
+});
 
 
 
