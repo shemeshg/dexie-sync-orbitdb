@@ -42,7 +42,8 @@ class IpfsOrbitRepo {
 
 export abstract class DbStore {
   orbitdb: OrbitDB;
-  store?: Store
+  protected storeProtected?: Store
+  abstract store?: Store
   statusFnc: (s: { queryData: unknown, status: string, newData: boolean  }) => void
   ipfs: IPFS.IPFS
 
@@ -61,7 +62,7 @@ export abstract class DbStore {
     this.store = await this.orbitdb.open(address, params)
   }
 
-  async createStore(name: string, type: TStoreType, publicAccess: boolean): Promise<void> {
+  protected async createStoreProtected(name: string, type: TStoreType, publicAccess: boolean): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const orbitIdentityId = (this.orbitdb as any).identity.id
     const params = {

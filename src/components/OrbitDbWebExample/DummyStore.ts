@@ -4,8 +4,12 @@ import EventStore from "orbit-db-eventstore"
 import FeedStore from "orbit-db-feedstore"
 import KeyValueStore from "orbit-db-kvstore"
 import {DbStore} from "./IpfsOrbitRepo"
+import Store from "orbit-db-store"
 
 export class DummyStore extends DbStore {
+  get store(): Store | undefined{
+    return this.storeProtected
+  }
   private queryTest() {
     if (!this.store) { throw new Error("No this.store instance") }
     if (this.store.type === 'eventlog')      
@@ -41,5 +45,9 @@ export class DummyStore extends DbStore {
     }
 
     this.statusFnc({ queryData: statusToReport, status: "", newData: true  });
+  }
+
+  async createStore(name: string, type: TStoreType, publicAccess: boolean): Promise<void> {
+    await this.createStoreProtected(name, type, publicAccess)
   }
 }
