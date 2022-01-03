@@ -27,6 +27,10 @@ export abstract class EventStoreAbstruct<T> extends DbStore {
 
   }
 
+  getLastRecords(numberOfRecord: number): LogEntry<T>[]{
+    return this.store.iterator({ limit: numberOfRecord }).collect()
+  }
+
   getByHash(hash: string): LogEntry<T> | undefined {
     return this.store.get(hash)
   }

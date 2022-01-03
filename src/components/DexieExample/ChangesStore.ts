@@ -1,5 +1,6 @@
 import {EventStoreAbstruct} from "./EventStoreAbstruct"
 import { ipfsRepo } from "../OrbitDbWebExample/IpfsOrbitRepo";
+import { v4 as uuidv4 } from 'uuid';
 
 enum ACTIONS {
   CREATE = 1,
@@ -39,6 +40,51 @@ class ChangesStore extends EventStoreAbstruct<ChangeItf>{
       await super.resetStore()
       this.changeStoreIsLoaded = false;
   }
+
+  async doCreate(table: string, key: string, obj: unknown, clientIdentity: string) {
+    const cid = await this.store?.add({
+      hash: uuidv4(),
+      rev: uuidv4(),
+      source: clientIdentity,
+      type: ACTIONS.CREATE,
+      table: table,
+      key: key,
+      obj: obj
+    })
+    if (!cid) { throw new Error("Error in log") }
+    return cid;
+  }
+
+
+
+  // eslint-disable-next-line
+  async doUpdate(table: string, key: string, modifications: { [keyPath: string]: any; }, clientIdentity: string) {
+    const cid = await this.store.add({
+      hash: uuidv4(),
+      rev: uuidv4(),
+      source: clientIdentity,
+      type: ACTIONS.UPDATE,
+      table: table,
+      key: key,
+      mods: modifications
+    })
+    if (!cid) { throw new Error("Error in log") }
+    return cid;
+  }
+
+  async doDelete(table: string, key: string, clientIdentity: string) {
+    const cid = await this.store.add({
+      hash: uuidv4(),
+      rev: uuidv4(),
+      source: clientIdentity,
+      type: ACTIONS.DELETE,
+      table: table,
+      key: key,
+    })
+    if (!cid) { throw new Error("Error in log") }
+    return cid;
+  }
+
 }
 
 export const changesStore = new ChangesStore(ipfsRepo);
