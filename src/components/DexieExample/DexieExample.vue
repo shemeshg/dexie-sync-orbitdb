@@ -34,8 +34,7 @@ export default defineComponent({
 
 
 
-    const doOnMounted = async () => {
-      await ipfsRepo.doConnect();
+    const doOnMounted = async () => {      
       const list = await db.syncable.list();
       if (list.length > 0) {
         isSyncDefined.value = true;

@@ -3,11 +3,22 @@ import { IDatabaseChange } from 'dexie-observable/api';
 import { v4 as uuidv4 } from 'uuid';
 
 import { orbitDexieSyncServerSide } from './OrbitDexieSyncServerSide';
-import store from "../../store/index"
+import {ChangeItf} from "./ChangesStore"
+
 
 export const SYNCABLE_PROTOCOL = 'orbitdb';
 
-export class OrbitDexieSyncClient implements ISyncProtocol {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+let onClientAppliedUpdates=(changes: ChangeItf[]):void =>{
+  return;
+}
+
+export function setOnClientAppliedUpdates(fc: (changes: ChangeItf[]) => void): void{
+  onClientAppliedUpdates=fc
+}
+export  class OrbitDexieSyncClient implements ISyncProtocol {
+  
+
   sync(
     context: IPersistedContext,
     url: string,
@@ -21,7 +32,7 @@ export class OrbitDexieSyncClient implements ISyncProtocol {
     onSuccess: (continuation: PollContinuation | ReactiveContinuation) => void,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any, again?: number) => void): void {
-    const POLL_INTERVAL = 3000//10000; // Poll every 10th second
+    const POLL_INTERVAL = 10000; // Poll every 10th second
     if (!context.clientIdentity) {
       context.clientIdentity = uuidv4()
       context.save
@@ -37,19 +48,29 @@ export class OrbitDexieSyncClient implements ISyncProtocol {
       url: url
     };
 
-    //To Make vue refresh
-    store.dispatch('refreshList')
+
 
 
     orbitDexieSyncServerSide.OrbitDixieServerSide(request)
       .then((serverSideData) => {
-        onChangesAccepted();
-        const changes = serverSideData?.changes || []
-
-        applyRemoteChanges(changes as unknown as IDatabaseChange[], serverSideData?.currentRevision, partial)
         
+        onChangesAccepted()
+        
+          let changes = serverSideData?.changes || []
+          changes = changes.sort((firstItem, secondItem) => firstItem.rev - secondItem.rev);          
+          return applyRemoteChanges(changes as unknown as IDatabaseChange[], serverSideData?.currentRevision, partial)
+        
+         .then(()=>{          
+           return changes
+         })
+        
+        
+      })
+      .then((changes)=>{
+        onClientAppliedUpdates(changes)
         onSuccess({ again: POLL_INTERVAL });
-      }).catch((e) => {
+      })
+      .catch((e) => {
         onError(e, Infinity);
       })
 

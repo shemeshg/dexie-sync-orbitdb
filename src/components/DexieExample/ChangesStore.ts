@@ -1,5 +1,4 @@
 import {EventStoreAbstruct} from "./EventStoreAbstruct"
-import { ipfsRepo } from "../OrbitDbWebExample/IpfsOrbitRepo";
 import { v4 as uuidv4 } from 'uuid';
 
 
@@ -8,9 +7,9 @@ enum ACTIONS {
   UPDATE = 2,
   DELETE = 3
 }
-interface ChangeItf {
+export interface ChangeItf {
   hash: string,
-  rev: string,
+  rev: number,
   source: string,
   type: ACTIONS,
   table: string,
@@ -28,7 +27,7 @@ export class ChangesStore extends EventStoreAbstruct<ChangeItf>{
   //Empty orbitdbUrlToOpen will create new store
   async loadStoreIfNotLoaded(orbitdbUrlToOpen: string): Promise<void>{    
     if (this.changeStoreIsLoaded){return;}
-    await ipfsRepo.doConnect();
+   
 
     if (orbitdbUrlToOpen) {
       await this.openStore(orbitdbUrlToOpen);
@@ -50,7 +49,7 @@ export class ChangesStore extends EventStoreAbstruct<ChangeItf>{
   async doCreate(table: string, key: string, obj: unknown, clientIdentity: string): Promise<string> {
     const cid = await this.store?.add({
       hash: uuidv4(),
-      rev: uuidv4(),
+      rev: (new Date()).getTime(),
       source: clientIdentity,
       type: ACTIONS.CREATE,
       table: table,

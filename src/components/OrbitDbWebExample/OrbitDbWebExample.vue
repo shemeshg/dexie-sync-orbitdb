@@ -160,7 +160,7 @@ export default defineComponent({
     };
 
     const doOnMounted = async () => {
-      await ipfsRepo.doConnect();
+      
       isCreateDbDisabled.value = false;
       isOpenDbDisabled.value = false;
       status.value = "IPFS Started";

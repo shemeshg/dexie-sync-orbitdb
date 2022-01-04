@@ -2,7 +2,9 @@
 import Dexie from 'dexie';
 import 'dexie-observable';
 import 'dexie-syncable';
-import {OrbitDexieSyncClient, SYNCABLE_PROTOCOL} from "./OrbitDexieSyncClient"
+import { OrbitDexieSyncClient, SYNCABLE_PROTOCOL, setOnClientAppliedUpdates } from "./OrbitDexieSyncClient"
+import store from "../../store/index"
+import { ChangeItf } from './ChangesStore';
 
 export interface Friend {
   oid?: string;
@@ -24,30 +26,22 @@ export class MySubClassedDexie extends Dexie {
 }
 
 
+setOnClientAppliedUpdates((changes: ChangeItf[]) => {
+  if (changes.length) {
+    //To Make vue refresh
+    store.dispatch('refreshList')
+    return;
+  }
+})
 
-export const db=new MySubClassedDexie();
+export const db = new MySubClassedDexie();
+
+
 Dexie.Syncable.registerSyncProtocol(SYNCABLE_PROTOCOL, { sync: new OrbitDexieSyncClient().sync });
 
 
-/*
-import {OrbitDexieSyncClient, SYNCABLE_PROTOCOL} from "./OrbitDexieSyncClient"
-db.syncable.connect (SYNCABLE_PROTOCOL, "https://syncserver.com/sync");
-
-db.syncable.connect(
-    "myProtocol",
-    "https://remote-server/...",
-    {options...})
-.catch(err => {
-    console.error (`Failed to connect: ${err.stack || err}`);
-    db.syncable.disconnect (url)
-});
-
-
-*/
-
-
 db.syncable.on('statusChanged', function (newStatus) {
-    console.log ("Sync Status changed: " + Dexie.Syncable.StatusTexts[newStatus]);
+  console.log("Sync Status changed: " + Dexie.Syncable.StatusTexts[newStatus]);
 });
 
 

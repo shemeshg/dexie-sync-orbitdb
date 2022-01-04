@@ -1,14 +1,33 @@
 <template>
-  <div id="nav">
+  <div id="nav" v-if="ipfsLoaded">
     <router-link to="/">Home</router-link> |
     <router-link to="/DiexieExample">DiexieExample</router-link> |
     <router-link to="/about">About</router-link>
   </div>
-  <router-view/>
+  <div  v-if="!ipfsLoaded">
+    Loading IPFS
+  </div>
+  <router-view v-if="ipfsLoaded" />
 </template>
+<script lang="ts">
+import { defineComponent, onMounted, ref } from "vue";
+import { ipfsRepo } from "@/components/OrbitDbWebExample/IpfsOrbitRepo"
 
+export default defineComponent({
+  name: "Home",
+  components: {},
+  setup() {
+    const ipfsLoaded=ref(false)
+    const doOnMounted = async () => {
+       await ipfsRepo.doConnect();
+       ipfsLoaded.value=true
+    };
+    onMounted(doOnMounted);
+    return {ipfsLoaded};
+  },
+});
+</script>
 <style lang="scss">
-
 #nav {
   padding: 30px;
 
