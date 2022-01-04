@@ -6,6 +6,7 @@ import { orbitDexieSyncServerSide } from './OrbitDexieSyncServerSide';
 import {ChangeItf} from "./ChangesStore"
 
 
+
 export const SYNCABLE_PROTOCOL = 'orbitdb';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -16,6 +17,9 @@ let onClientAppliedUpdates=(changes: ChangeItf[]):void =>{
 export function setOnClientAppliedUpdates(fc: (changes: ChangeItf[]) => void): void{
   onClientAppliedUpdates=fc
 }
+
+
+
 export  class OrbitDexieSyncClient implements ISyncProtocol {
   
 
