@@ -1,30 +1,39 @@
-import EventStore from "orbit-db-eventstore";
+import FeedStore from "orbit-db-feedstore";
 import { DbStore } from "../OrbitDbWebExample/IpfsOrbitRepo"
 export abstract class EventStoreAbstruct<T> extends DbStore {
 
   async createStore(name: string, publicAccess: boolean): Promise<void> {
-    await this.createStoreProtected(name, "eventlog", publicAccess)
+    await this.createStoreProtected(name, "feed", publicAccess)
   }
 
-  get store(): EventStore<T> {
-    return this.storeProtected as EventStore<T>
+  get store(): FeedStore<T> {
+    return this.storeProtected as FeedStore<T>
   }
-  set store(store: EventStore<T>) {
+  set store(store: FeedStore<T>) {
     this.storeProtected = store
   }
 
-  getAll(baseRevision?: string): T[] | undefined {
+  
+  getAllGt(baseRevision?: string):LogEntry<T>[]{
     if (baseRevision) {
       return this.store.iterator({ gt: baseRevision, limit: -1 })
         .collect()
-        .map((e) => e.payload.value)
+        
     } else {
       return this.store.iterator({limit: -1})
         .collect()
-        .map((e) => e.payload.value)
+  
     }
+  }
 
-
+  getAllLt(baseRevision?: string): LogEntry<T>[]{
+    if (baseRevision) {
+      return this.store.iterator({ lte: baseRevision, limit: -1 })
+        .collect()
+    } else {
+      return this.store.iterator({limit: -1})
+        .collect()
+    }
   }
 
   getLastRecords(numberOfRecord: number): LogEntry<T>[]{
@@ -36,6 +45,11 @@ export abstract class EventStoreAbstruct<T> extends DbStore {
   }
 
   async add(row: T): Promise<string | undefined> {
-    return this.store.add(row)
+    return await this.store.add(row)
   }
+
+  async remove(hash: string): Promise<string | undefined> {
+    return await this.store.remove(hash)
+  }
+
 }

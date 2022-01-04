@@ -58,7 +58,7 @@ export  class OrbitDexieSyncClient implements ISyncProtocol {
     orbitDexieSyncServerSide.OrbitDixieServerSide(request)
       .then((serverSideData) => {
         
-        onChangesAccepted()
+        
         
           let changes = serverSideData?.changes || []
           changes = changes.sort((firstItem, secondItem) => firstItem.rev - secondItem.rev);          
@@ -71,6 +71,7 @@ export  class OrbitDexieSyncClient implements ISyncProtocol {
         
       })
       .then((changes)=>{
+        onChangesAccepted()
         onClientAppliedUpdates(changes)
         onSuccess({ again: POLL_INTERVAL });
       })
