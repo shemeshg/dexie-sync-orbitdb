@@ -2,6 +2,10 @@
 
 Sync dixie to Orbitdb
 
+Deployed to:
+
+https://ipfs.io/ipfs/QmNcYaFqpcJfTVeXXF1iP91FxyM16Xfx46FhsTLC2nWqfD/#/DiexieExample
+
 ## Project setup
 ```
 npm install
