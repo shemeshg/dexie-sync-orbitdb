@@ -1,5 +1,7 @@
 # dexie-sync-orbitdb
 
+Sync Orbitdb to dixie
+
 ## Project setup
 ```
 npm install

@@ -6,13 +6,7 @@ import { ChangesStore } from "./ChangesStore";
 class OrbitDexieSyncServerSide {
   changesStore?: ChangesStore
 
-  toCreateObj(c: IDatabaseChange): ICreateChange {
-    return c as ICreateChange
-  }
 
-  toUpdateObj(c: IDatabaseChange): IUpdateChange {
-    return c as IUpdateChange
-  }
 
   async OrbitDixieServerSide(request:
     {
@@ -21,57 +15,40 @@ class OrbitDexieSyncServerSide {
       changes: IDatabaseChange[]; syncedRevision: unknown; url: string
     }) {
     if (!this.changesStore) {
-      this.changesStore = new ChangesStore(ipfsRepo)
-      this.changesStore.loadStoreIfNotLoaded(request.url)
-    }
+      this.changesStore = new ChangesStore(ipfsRepo)      
+    } 
     const changesStore = this.changesStore;
     await changesStore.loadStoreIfNotLoaded(request.url)
-    const baseRevision = request.baseRevision as string | undefined
-    const serverChangesFromOtherUsers = changesStore.getAllGt(baseRevision).map((e) => e.payload.value).filter((row) => { return row.source !== request.clientIdentity })
-
-    const lr = changesStore.getLastRecords(1)
-    let currentRevision = ""
-    if (lr.length === 1) {
-      currentRevision = changesStore.getLastRecords(1)[0].key
-    }
+    const serverChangesFromOtherUsers = changesStore.getAllOtherUsersGt(request.clientIdentity)
 
     const CREATE = 1,
       UPDATE = 2,
       DELETE = 3;
 
-    const allPreviousChanges = changesStore.getAllLt(baseRevision).filter((row) => { return row.payload.value.type !== DELETE }) || []
-
-
+    
     for (let i = 0; i < request.changes.length; i++) {
       const change = request.changes[i]
 
-      //delete old entries
-      const oldEntriesToDelete = allPreviousChanges.filter((row) => { return row.payload.value.key === change.key })
-
-      for (let z = 0; z < oldEntriesToDelete.length; z++) {
-        await changesStore.remove(oldEntriesToDelete[z].hash)
-      }
-
       switch (change.type) {
         case CREATE:
-
-          currentRevision = await changesStore.doCreate(change.table, change.key, this.toCreateObj(change).obj, request.clientIdentity);
+          await changesStore.doCreate(change.table, change.key, (change as ICreateChange).obj, request.clientIdentity);
           break;
         case UPDATE:
-          currentRevision = await changesStore.doUpdate(change.table, change.key, this.toUpdateObj(change).mods, request.clientIdentity);
+          await changesStore.doUpdate(change.table, change.key, (change as IUpdateChange).mods, request.clientIdentity);
           break;
         case DELETE:
-          currentRevision = await changesStore.doDelete(change.table, change.key, request.clientIdentity);
+          await changesStore.doDelete(change.table, change.key, request.clientIdentity);
           break;
       }
     }
 
 
 
-    return {
+    return {      
       type: "changes",
-      changes: serverChangesFromOtherUsers,
-      currentRevision: currentRevision,
+      changes: serverChangesFromOtherUsers.rowsToSyncLocally,
+      currentRevision: changesStore.sharedCounter?.store.value,
+      countersToSetAfterApply: serverChangesFromOtherUsers.countersToSetAfterApply,
       partial: false // Tell client that these are the only changes we are aware of. Since our mem DB is syncronous, we got all changes in one chunk.
     }
 

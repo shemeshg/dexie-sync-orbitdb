@@ -50,6 +50,8 @@ export abstract class DbStore {
   statusFnc: (s: { queryData: unknown, status: string, newData: boolean  }) => void
   ipfs: IPFS.IPFS
 
+  abstract queryAndRender(): Promise<void>;
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars 
   constructor(ipfsOrbitRepo: IpfsOrbitRepo, statusFnc = (s: { queryData: unknown, status: string, newData: boolean  }) => { return; }) {
     if (!ipfsOrbitRepo.orbitdb || !ipfsOrbitRepo.ipfs) { throw new Error("No this.orbitdb instance") }
@@ -58,7 +60,7 @@ export abstract class DbStore {
     this.statusFnc = statusFnc
   }
 
-  async openStore(address: string): Promise<void>{
+  protected async openStoreProtected(address: string): Promise<void>{
     const params = {
       sync: true 
     } as IOpenOptions
@@ -92,9 +94,7 @@ export abstract class DbStore {
   get storeAddress(): string | undefined {
     return this.store?.address.toString();
   }
-
-  abstract queryAndRender(): Promise<void>;
-
+ 
   async loadStore(): Promise<void> {
     if (!this.store) { throw new Error("No this.store instance") }
     // When the database is ready (ie. loaded), display results

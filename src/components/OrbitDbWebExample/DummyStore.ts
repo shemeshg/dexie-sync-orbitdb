@@ -29,6 +29,9 @@ export class DummyStore extends DbStore {
       throw new Error(`Unknown datatbase type:  ${this.store.type}`)
 
   }
+  async openStore(address: string): Promise<void> {
+      this.openStoreProtected(address)
+  }
 
    async queryAndRender(): Promise<void> {
     if (!this.store) { throw new Error("No this.store instance") }
