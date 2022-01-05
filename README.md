@@ -1,6 +1,6 @@
 # dexie-sync-orbitdb
 
-Sync Orbitdb to dixie
+Sync dixie to Orbitdb
 
 ## Project setup
 ```
