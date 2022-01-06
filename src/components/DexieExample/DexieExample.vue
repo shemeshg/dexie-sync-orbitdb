@@ -1,5 +1,4 @@
 <template>
-  
   <p v-if="!isIpfsReady">Loading IPFS...</p>
   <div v-if="isIpfsReady">
     <p v-if="isSyncDefined">Sync with {{ syncUrl }}</p>
@@ -8,6 +7,15 @@
     <button v-if="!isSyncDefined" @click="doDefineSync">
       Create repository (Empty string) or type OrbitDb address and connect
     </button>
+    <div v-if="isSyncDefined">
+      <p>
+        Send replica to all, to set current replica as source of trouth for up
+        to current time       
+      </p>
+      <p>
+        <button @click="sendReplicaToall">Send replica to all</button>
+      </p>
+    </div>
 
     <FriendsList v-if="isSyncDefined" />
   </div>
@@ -18,8 +26,7 @@ import { defineComponent, ref, onMounted } from "vue";
 import { db } from "./db";
 import { SYNCABLE_PROTOCOL } from "./OrbitDexieSyncClient";
 
-import { ipfsRepo } from "../OrbitDbWebExample/IpfsOrbitRepo";
-import { ChangesStore } from "./ChangesStore";
+import { getChangesStore } from "./ChangesStore";
 
 export default defineComponent({
   props: {},
@@ -31,17 +38,15 @@ export default defineComponent({
     const orbitdbUrlToOpen = ref("");
     
 
-
-
-
-    const doOnMounted = async () => {      
+    const doOnMounted = async () => {
       const list = await db.syncable.list();
       if (list.length > 0) {
         isSyncDefined.value = true;
         syncUrl.value = list[0];
-        
-        await db.syncable.connect(SYNCABLE_PROTOCOL, syncUrl.value);
 
+        await db.syncable.connect(SYNCABLE_PROTOCOL, syncUrl.value);
+        await getChangesStore(syncUrl.value);
+       
       }
 
       isIpfsReady.value = true;
@@ -56,11 +61,12 @@ export default defineComponent({
       isSyncDefined.value = false;
     };
 
+    
+
     const doDefineSync = async () => {
       await doUndefineSync();
-      const changesStore = new ChangesStore(ipfsRepo);
-      //await changesStore.resetStore()
-      await changesStore.loadStoreIfNotLoaded(orbitdbUrlToOpen.value);
+      
+      const changesStore = await getChangesStore(syncUrl.value);
 
       if (!changesStore.storeAddress) {
         return;
@@ -71,15 +77,21 @@ export default defineComponent({
       syncUrl.value = changesStore.storeAddress;
     };
 
+    const sendReplicaToall=async ()=>{
+      const changesStore = await getChangesStore(syncUrl.value);      
+      const clientIdentity = localStorage.getItem("clientIdentity") as string
+      await changesStore.sendReplicaToAll(db,clientIdentity)
+    }
     onMounted(doOnMounted);
-    
+
     return {
       isSyncDefined,
       doUndefineSync,
       doDefineSync,
       syncUrl,
       orbitdbUrlToOpen,
-      isIpfsReady,    
+      isIpfsReady,
+      sendReplicaToall,
     };
   },
 });

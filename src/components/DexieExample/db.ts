@@ -5,6 +5,7 @@ import 'dexie-syncable';
 import { OrbitDexieSyncClient, SYNCABLE_PROTOCOL, setOnClientAppliedUpdates } from "./OrbitDexieSyncClient"
 import store from "../../store/index"
 import { ChangeItf } from './ChangesStore';
+import {importInto, exportDB} from "dexie-export-import";
 
 export interface Friend {
   oid?: string;
@@ -23,6 +24,14 @@ export class MySubClassedDexie extends Dexie {
       friends: '$$oid, name, age' // Primary key and indexed props
     });
   }
+
+  async doExport():Promise<Blob>{
+    return await exportDB(this)
+  }
+
+  async doImport(file: Blob): Promise<void>{
+    return await importInto(db,file,{clearTablesBeforeImport: true})
+  }  
 }
 
 

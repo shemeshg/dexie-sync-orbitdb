@@ -12,6 +12,7 @@
     "@types/orbit-db": "github:orbitdb/orbit-db-types",
     "core-js": "^3.6.5",
     "dexie": "^3.2.0",
+    "dexie-export-import": "^1.0.3",
     "dexie-observable": "^3.0.0-beta.11",
     "dexie-syncable": "^3.0.0-beta.10",
     "ipfs": "^0.61.0",

@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { orbitDexieSyncServerSide } from './OrbitDexieSyncServerSide';
 import { ChangeItf } from "./ChangesStore"
-
+import { getChangesStore } from "./ChangesStore";
 
 
 export const SYNCABLE_PROTOCOL = 'orbitdb';
@@ -40,7 +40,8 @@ async function doServerSide(request: {
     await applyRemoteChanges(serverSideChanges as unknown as IDatabaseChange[], serverSideData?.currentRevision, partial)
   
     onChangesAccepted()
-    await orbitDexieSyncServerSide.changesStore?.setCountersAfterApply(request.clientIdentity, serverSideData.countersToSetAfterApply)
+    const changesStore = await getChangesStore(request.url)
+    await changesStore.setCountersAfterApply(request.clientIdentity, serverSideData.countersToSetAfterApply)
     onClientAppliedUpdates(serverSideChanges)
     onSuccess({ again: POLL_INTERVAL });
   } catch(e){
@@ -79,6 +80,7 @@ export class OrbitDexieSyncClient implements ISyncProtocol {
     if (!context.clientIdentity) {
       context.clientIdentity = uuidv4()
       context.save
+      localStorage.setItem("clientIdentity",context.clientIdentity)
     }
 
 

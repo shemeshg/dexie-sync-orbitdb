@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import CounterStore from "orbit-db-counterstore";
 import { ipfsRepo } from "../OrbitDbWebExample/IpfsOrbitRepo";
 import { DbStore } from "../OrbitDbWebExample/IpfsOrbitRepo"
+import { MySubClassedDexie } from "./db";
 
 
 enum ACTIONS {
@@ -28,6 +29,13 @@ interface DocumentItf {
   userData: ChangeItf[]
   otherUsersLastRevisionKnown: OtherUsersLastRevisionKnown
   counter: number
+}
+
+interface LastBackupItf {
+  otherUsersLastRevisionKnown: OtherUsersLastRevisionKnown,
+  ipfsCid: string
+  rev: number,
+  clientIdentity: string
 }
 
 class SharedCounter extends DbStore {
@@ -58,7 +66,7 @@ class SharedCounter extends DbStore {
 }
 
 
-export class ChangesStore extends EventStoreAbstruct<DocumentItf | string>{
+export class ChangesStore extends EventStoreAbstruct<DocumentItf | string | LastBackupItf>{
   sharedCounter?: SharedCounter
   async createStore(name: string, publicAccess: boolean): Promise<void> {
     await this.createStoreProtected(name, "keyvalue", publicAccess)
@@ -92,7 +100,6 @@ export class ChangesStore extends EventStoreAbstruct<DocumentItf | string>{
   async loadStoreIfNotLoaded(orbitdbUrlToOpen: string): Promise<void> {
     if (this.changeStoreIsLoaded) { return; }
 
-
     if (orbitdbUrlToOpen) {
       await this.openStore(orbitdbUrlToOpen);
       await this.loadStore();
@@ -124,6 +131,28 @@ export class ChangesStore extends EventStoreAbstruct<DocumentItf | string>{
     this.changeStoreIsLoaded = false;
   }
 
+  async sendReplicaToAll(db: MySubClassedDexie, clientIdentity: string): Promise<void>{
+    const currentUserDoc = this.store.get(clientIdentity) as DocumentItf
+    console.log(this.store.get("lastbackup"))
+    debugger;
+    if(!currentUserDoc){return;}
+    const fileObj = await db.doExport()
+    debugger;
+    const fileIpfs = await this.ipfs.add(fileObj)
+    const sharedCounter = await this.sharedCounter?.incAndGetNewVal() as number
+    const lastBackup: LastBackupItf = {
+      otherUsersLastRevisionKnown: currentUserDoc.otherUsersLastRevisionKnown,
+      ipfsCid: fileIpfs.cid.toString(),
+      rev: sharedCounter,
+      clientIdentity: clientIdentity
+    }
+    debugger;    
+    const g= await this.store.put("lastbackup", lastBackup)
+    console.log(g)
+    debugger;
+    return;
+  }
+
   getAllOtherUsersGt(clientIdentity: string): {
     rowsToSyncLocally: ChangeItf[];
     countersToSetAfterApply: {
@@ -133,7 +162,7 @@ export class ChangesStore extends EventStoreAbstruct<DocumentItf | string>{
   } {    
     
     const otherUsersKeys = Object.keys(this.store.all)
-        .filter((key) => { return key !== clientIdentity && key !=="counter" })
+        .filter((key) => { return key !== clientIdentity && key !=="counter" && key !== "lastbackup" })
     const currentUserDoc = this.store.get(clientIdentity) as DocumentItf
     
     let rowsToSyncLocally: ChangeItf[] = []
@@ -237,4 +266,13 @@ export class ChangesStore extends EventStoreAbstruct<DocumentItf | string>{
     return cid;
   }
 
+}
+
+let _changesStore: ChangesStore
+export async function getChangesStore(orbitdbUrlToOpen: string): Promise<ChangesStore>{
+  if (!_changesStore) {
+    _changesStore = new ChangesStore(ipfsRepo)
+    await _changesStore.loadStoreIfNotLoaded(orbitdbUrlToOpen)
+  }
+  return _changesStore
 }
