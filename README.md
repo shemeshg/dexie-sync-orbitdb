@@ -3,7 +3,7 @@
 Sync dixie to Orbitdb
 
 Deployed to:
-https://ipfs.io/ipfs/QmQDohwdWKh5fuZUdttX4596kgekNxnEnceR8c8qqbtgKS/#/DiexieExample
+https://ipfs.io/ipfs/QmUDe5q8CnUdsaBAjN1Cg2db883utq3MjRHD5fB6ki6cM6/#/DiexieExample
 
 
 ## Project setup
