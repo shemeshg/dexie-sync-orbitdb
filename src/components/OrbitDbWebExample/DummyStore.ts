@@ -30,7 +30,7 @@ export class DummyStore extends DbStore {
 
   }
   async openStore(address: string): Promise<void> {
-      this.openStoreProtected(address)
+      await this.openStoreProtected(address)
   }
 
    async queryAndRender(): Promise<void> {

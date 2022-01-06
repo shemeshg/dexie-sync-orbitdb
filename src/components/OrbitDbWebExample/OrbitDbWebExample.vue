@@ -141,6 +141,12 @@ export default defineComponent({
       }
       const dbstore = new DummyStore(ipfsRepo, callbackFunction);
       await dbstore.openStore(dbaddress.value);
+      
+      if (!dbstore.store){
+        isCreateDbDisabled.value = false;
+        isOpenDbDisabled.value = false;
+        status.value="Could not open store"
+        return;}
       status.value = "Store created";
       await dbstore.loadStore();
       status.value = "Store loaded";
