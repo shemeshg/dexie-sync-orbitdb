@@ -5,12 +5,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { orbitDexieSyncServerSide } from './OrbitDexieSyncServerSide';
 import { ChangeItf } from "./ChangesStore"
 import { getChangesStore } from "./ChangesStore";
-
+import { db } from "./db";
 
 export const SYNCABLE_PROTOCOL = 'orbitdb';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-let onClientAppliedUpdates = (changes: ChangeItf[]): void => {
+let onClientAppliedUpdates = (changes: ChangeItf[], refreshAnyway=false): void => {
   return;
 }
 
@@ -43,6 +43,15 @@ async function doServerSide(request: {
     const changesStore = await getChangesStore(request.url)
     await changesStore.setCountersAfterApply(request.clientIdentity, serverSideData.countersToSetAfterApply)
     onClientAppliedUpdates(serverSideChanges)
+    if(changesStore.requestSendReplicaToAll){
+      await changesStore.sendReplicaToAll(db, request.clientIdentity)
+      changesStore.requestSendReplicaToAll = false;
+    }
+    const ret=await changesStore.restoreReplicaAndRollupChangesIfRequired(db, request.clientIdentity)
+    if(ret.refresh){
+      await applyRemoteChanges(ret.appayData as unknown as IDatabaseChange[], serverSideData?.currentRevision, partial)
+      onClientAppliedUpdates([], true)
+    }
     onSuccess({ again: POLL_INTERVAL });
   } catch(e){
     onError(e, Infinity);
@@ -80,7 +89,6 @@ export class OrbitDexieSyncClient implements ISyncProtocol {
     if (!context.clientIdentity) {
       context.clientIdentity = uuidv4()
       context.save
-      localStorage.setItem("clientIdentity",context.clientIdentity)
     }
 
 

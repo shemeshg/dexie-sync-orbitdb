@@ -9,8 +9,9 @@
     </button>
     <div v-if="isSyncDefined">
       <p>
-        Send replica to all, to set current replica as source of trouth for up
-        to current time       
+        Since every node rollup its own changes, no consistency among nodes guaranteed <br/>
+        Send replica to all, to set current replica as source of truth,  <br/>
+        and other nodes will re-rollup on top of that    <br/>
       </p>
       <p>
         <button @click="sendReplicaToall">Send replica to all</button>
@@ -79,8 +80,7 @@ export default defineComponent({
 
     const sendReplicaToall=async ()=>{
       const changesStore = await getChangesStore(syncUrl.value);      
-      const clientIdentity = localStorage.getItem("clientIdentity") as string
-      await changesStore.sendReplicaToAll(db,clientIdentity)
+      changesStore.requestSendReplicaToAll = true      
     }
     onMounted(doOnMounted);
 

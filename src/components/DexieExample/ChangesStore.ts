@@ -4,7 +4,7 @@ import CounterStore from "orbit-db-counterstore";
 import { ipfsRepo } from "../OrbitDbWebExample/IpfsOrbitRepo";
 import { DbStore } from "../OrbitDbWebExample/IpfsOrbitRepo"
 import { MySubClassedDexie } from "./db";
-
+import { SYNCABLE_PROTOCOL } from "./OrbitDexieSyncClient";
 
 enum ACTIONS {
   CREATE = 1,
@@ -28,14 +28,14 @@ export type OtherUsersLastRevisionKnown = { counter: number; clientIdentity: str
 interface DocumentItf {
   userData: ChangeItf[]
   otherUsersLastRevisionKnown: OtherUsersLastRevisionKnown
-  counter: number
+  counter: number,
+  lastBackup?: LastBackupItf
 }
 
 interface LastBackupItf {
-  otherUsersLastRevisionKnown: OtherUsersLastRevisionKnown,
+  allUsersCounterHighWattermark: {clientIdentity:string; counter: number}[]
   ipfsCid: string
   rev: number,
-  clientIdentity: string
 }
 
 class SharedCounter extends DbStore {
@@ -66,7 +66,8 @@ class SharedCounter extends DbStore {
 }
 
 
-export class ChangesStore extends EventStoreAbstruct<DocumentItf | string | LastBackupItf>{
+class ChangesStore extends EventStoreAbstruct<DocumentItf | string | LastBackupItf>{
+  requestSendReplicaToAll = false
   sharedCounter?: SharedCounter
   async createStore(name: string, publicAccess: boolean): Promise<void> {
     await this.createStoreProtected(name, "keyvalue", publicAccess)
@@ -131,25 +132,65 @@ export class ChangesStore extends EventStoreAbstruct<DocumentItf | string | Last
     this.changeStoreIsLoaded = false;
   }
 
+  async  restoreReplicaAndRollupChangesIfRequired(db: MySubClassedDexie, clientIdentity: string): Promise<{ refresh: boolean; appayData?: ChangeItf[]; }>{
+    const currentUserDoc = this.store.get(clientIdentity) as DocumentItf        
+    if(!currentUserDoc){return {refresh:false}}
+    
+    const lastbackup = this.store.get("lastbackup") as LastBackupItf
+    if (!currentUserDoc.lastBackup){return {refresh:false};}
+    const doRestore = (lastbackup.rev && currentUserDoc.lastBackup.rev < lastbackup.rev)
+
+    if (!doRestore) {return {refresh:false};}
+
+    const fileIpfs = await   this.getBlobByCid(lastbackup.ipfsCid,"text")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fileText = await   fileIpfs.text() as any
+    const j=JSON.parse(fileText)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tables=j.data.data.filter( (row: any)=>{return row.tableName[0]!=="_"})
+    
+    const list = await db.syncable.list();
+    await db.syncable.disconnect(list[0]);
+
+    
+    for (let i=0;i<tables.length;i++){
+      await db.table(tables[i].tableName).clear()
+      await db.table(tables[i].tableName).bulkAdd(tables[i].rows)
+    }
+    db.table("_changes").clear()
+
+    currentUserDoc.lastBackup = lastbackup;
+    const truncateAllItemsBelow= lastbackup.allUsersCounterHighWattermark.filter((row)=>{return row.clientIdentity === clientIdentity})[0].counter
+    currentUserDoc.userData = currentUserDoc.userData.filter((row)=>{return row.rev>truncateAllItemsBelow})
+    await this.store.set(clientIdentity, currentUserDoc)
+    await db.syncable.connect(SYNCABLE_PROTOCOL, list[0]);
+    return {refresh: true, appayData: currentUserDoc.userData}
+  }
+
   async sendReplicaToAll(db: MySubClassedDexie, clientIdentity: string): Promise<void>{
     const currentUserDoc = this.store.get(clientIdentity) as DocumentItf
-    console.log(this.store.get("lastbackup"))
-    debugger;
+        
     if(!currentUserDoc){return;}
     const fileObj = await db.doExport()
-    debugger;
-    const fileIpfs = await this.ipfs.add(fileObj)
+    const fileText = await fileObj.text();
+    const fileIpfs = await this.ipfs.add(fileText)
     const sharedCounter = await this.sharedCounter?.incAndGetNewVal() as number
+    let allUsersCounterHighWattermark: { counter: number; clientIdentity:string;}[] = []
+    // get max current user, get max all others
+    allUsersCounterHighWattermark.push({clientIdentity:clientIdentity,counter: Math.max( ...currentUserDoc.userData.map( (row)=>{return row.rev}) )})
+    allUsersCounterHighWattermark = allUsersCounterHighWattermark.concat( currentUserDoc.otherUsersLastRevisionKnown)
+
     const lastBackup: LastBackupItf = {
-      otherUsersLastRevisionKnown: currentUserDoc.otherUsersLastRevisionKnown,
+      allUsersCounterHighWattermark: allUsersCounterHighWattermark,
       ipfsCid: fileIpfs.cid.toString(),
       rev: sharedCounter,
-      clientIdentity: clientIdentity
     }
-    debugger;    
-    const g= await this.store.put("lastbackup", lastBackup)
-    console.log(g)
-    debugger;
+    
+    await this.store.put("lastbackup", lastBackup)
+    currentUserDoc.lastBackup = lastBackup
+    currentUserDoc.userData = []
+    await this.store.put(clientIdentity, currentUserDoc)    
+    
     return;
   }
 
@@ -273,6 +314,6 @@ export async function getChangesStore(orbitdbUrlToOpen: string): Promise<Changes
   if (!_changesStore) {
     _changesStore = new ChangesStore(ipfsRepo)
     await _changesStore.loadStoreIfNotLoaded(orbitdbUrlToOpen)
-  }
+  } 
   return _changesStore
 }

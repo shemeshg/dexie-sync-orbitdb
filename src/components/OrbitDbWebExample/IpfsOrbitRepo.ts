@@ -128,6 +128,27 @@ export abstract class DbStore {
   async resetStore(): Promise<void> {
     await this.store?.close()
   }
+
+  async getBlobByCid(cid: string, objType: string): Promise<Blob> {
+    const stream = this.ipfs.cat(cid)
+    const content = [];
+
+    if (stream) {
+      for await (const chunk of stream) {
+        content.push(chunk);
+      }
+    }
+
+    return new Blob(content, { type: objType })
+  }
+
+
+
+  async getImageBase64ByCid(cid: string, objType: string): Promise<string> {
+    const b = await this.getBlobByCid(cid, objType)
+
+    return URL.createObjectURL(b)
+  }
 }
 
 

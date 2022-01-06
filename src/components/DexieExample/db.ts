@@ -5,7 +5,7 @@ import 'dexie-syncable';
 import { OrbitDexieSyncClient, SYNCABLE_PROTOCOL, setOnClientAppliedUpdates } from "./OrbitDexieSyncClient"
 import store from "../../store/index"
 import { ChangeItf } from './ChangesStore';
-import {importInto, exportDB} from "dexie-export-import";
+import { exportDB} from "dexie-export-import";
 
 export interface Friend {
   oid?: string;
@@ -26,17 +26,15 @@ export class MySubClassedDexie extends Dexie {
   }
 
   async doExport():Promise<Blob>{
-    return await exportDB(this)
+    return await exportDB(this,{prettyJson: true})
   }
 
-  async doImport(file: Blob): Promise<void>{
-    return await importInto(db,file,{clearTablesBeforeImport: true})
-  }  
+
 }
 
 
-setOnClientAppliedUpdates((changes: ChangeItf[]) => {
-  if (changes.length) {
+setOnClientAppliedUpdates((changes: ChangeItf[], refreshAnyway=false) => {
+  if (changes.length || refreshAnyway) {
     //To Make vue refresh
     store.dispatch('refreshList')
     return;
