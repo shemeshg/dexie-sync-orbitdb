@@ -14,7 +14,7 @@ let onClientAppliedUpdates = (changes: ChangeItf[], refreshAnyway=false): void =
   return;
 }
 
-const POLL_INTERVAL = 3000; // Poll every 10th second
+const POLL_INTERVAL = 10000; // Poll every 10th second
 
 async function doServerSide(request: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
