@@ -110,10 +110,14 @@ class ChangesStore extends EventStoreAbstruct<DocumentItf | string | LastBackupI
       await this.sharedCounter.openStore(counterDbAddress)
       await this.sharedCounter.loadStore()      
     } else {
+      // Probably you want this to be 
+      // await this.createStore("changes" + UniqueString, true);
       await this.createStore("changes", true);
       await this.loadStore();
 
       this.sharedCounter = new SharedCounter(ipfsRepo)
+      // Probably you want this to be 
+      // await this.sharedCounter.createStore("counter" + UniqueString, true)
       await this.sharedCounter.createStore("counter", true)
       this.sharedCounter.loadStore()
       if (this.sharedCounter.storeAddress) {
