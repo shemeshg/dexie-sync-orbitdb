@@ -1,10 +1,6 @@
 # dexie-sync-orbitdb
 
-Sync dixie to Orbitdb
-
-Deployed to:
-https://ipfs.io/ipfs/QmUDe5q8CnUdsaBAjN1Cg2db883utq3MjRHD5fB6ki6cM6/#/DiexieExample
-
+Sync [Dexie.js](https://dexie.org/) using [Dexie.Syncable](https://dexie.org/docs/Syncable/Dexie.Syncable.js.html) to [OrbitDB](https://orbitdb.org/).
 
 ## Project setup
 ```
