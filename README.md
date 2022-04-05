@@ -2,6 +2,11 @@
 
 Sync [Dexie.js](https://dexie.org/) using [Dexie.Syncable](https://dexie.org/docs/Syncable/Dexie.Syncable.js.html) to [OrbitDB](https://orbitdb.org/).
 
+See code here:
+https://github.com/shemeshg/dexie-sync-orbitdb/blob/master/src/components/DexieExample/db.ts
+
+
+
 ## Project setup
 ```
 npm install
